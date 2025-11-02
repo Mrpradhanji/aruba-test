@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
+import { randomBytes } from 'crypto'
 import { rateLimit } from '@/lib/rate-limit'
 
-import { findUserByEmail, createUser } from '@/lib/users'
+import { findUserByEmail, createUser, updateUser } from '@/lib/users'
+import { sendVerificationEmail } from '@/lib/email'
 
 // Rate limiting configuration
 const limiter = rateLimit({
@@ -74,6 +76,11 @@ export async function POST(req: Request) {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10)
 
+    // Generate verification token
+    const verificationToken = randomBytes(32).toString('hex')
+    const verificationTokenExpires = new Date()
+    verificationTokenExpires.setHours(verificationTokenExpires.getHours() + 24) // 24 hours expiry
+
     // Create user
     const user = await createUser({
       email,
@@ -81,24 +88,71 @@ export async function POST(req: Request) {
       name: `${firstName} ${lastName}`.trim(),
     })
 
-    // Return success response
+    // Update user with verification token
+    await updateUser(user.id, {
+      verificationToken,
+      verificationTokenExpires,
+    })
+
+    // Send verification email
+    let emailSent = false
+    let emailError = null
+    try {
+      console.log('Attempting to send verification email...')
+      await sendVerificationEmail({
+        email: user.email,
+        name: user.name || firstName,
+        verificationToken,
+      })
+      emailSent = true
+      console.log('✓ Verification email sent successfully to:', user.email)
+    } catch (err) {
+      emailError = err
+      console.error('✗ Error sending verification email:', err)
+      // Continue even if email fails - user is still created
+      // Log the error but don't fail the signup
+      // The user can request a new verification email later if needed
+    }
+
+    // Check environment variables for debugging
+    if (!process.env.RESEND_API_KEY) {
+      console.warn('⚠ WARNING: RESEND_API_KEY is not set in environment variables')
+      console.warn('⚠ Email sending is disabled. Please add RESEND_API_KEY to .env.local')
+    }
+
+    // Return success response with email status
     return NextResponse.json(
       { 
-        message: 'User created successfully',
+        message: emailSent 
+          ? 'User created successfully. Please check your email to verify your account.'
+          : 'User created successfully. However, we could not send the verification email. Please check your email configuration.',
+        emailSent,
         user: {
           id: user.id,
           email: user.email,
           name: user.name,  
           role: user.role,  
-        }
+        },
+        ...(process.env.NODE_ENV === 'development' && emailError && {
+          emailError: emailError instanceof Error ? emailError.message : 'Unknown error'
+        })
       },
       { status: 201 }
     )
 
   } catch (error) {
     console.error('Signup error:', error)
+    
+    // Provide more detailed error information
+    const errorMessage = error instanceof Error ? error.message : 'An error occurred during signup'
+    
+    // Don't expose internal error details in production
     return NextResponse.json(
-      { error: 'An error occurred during signup' },
+      { 
+        error: process.env.NODE_ENV === 'development' 
+          ? errorMessage 
+          : 'An error occurred during signup. Please try again later.' 
+      },
       { status: 500 }
     )
   }

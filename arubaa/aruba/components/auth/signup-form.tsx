@@ -186,15 +186,15 @@ export function SignupForm() {
         return;
       }
 
-      // Success - show success message and redirect
+      // Success - show success message about email verification
       setSuccessMessage(
-        "Account created successfully! Redirecting to login..."
+        data.message || "Account created successfully! Please check your email to verify your account."
       );
 
-      // Redirect to login page after a short delay
+      // Redirect to login page after a longer delay to allow user to read message
       setTimeout(() => {
         window.location.href = "/login";
-      }, 1500);
+      }, 4000);
     } catch (error) {
       console.error("Signup error:", error);
       setGeneralError("An error occurred. Please try again.");

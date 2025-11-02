@@ -9,6 +9,9 @@ interface User {
   passwordHash: string
   name: string | null
   role: 'USER' | 'ADMIN'
+  emailVerified: boolean
+  verificationToken: string | null
+  verificationTokenExpires: Date | null
   failedLoginAttempts: number
   lastFailedLoginAttempt: Date | null
   accountLockedUntil: Date | null
@@ -55,6 +58,9 @@ export async function createUser(data: {
     passwordHash: data.passwordHash,
     name: data.name,
     role: data.role || 'USER',
+    emailVerified: false,
+    verificationToken: null,
+    verificationTokenExpires: null,
     failedLoginAttempts: 0,
     lastFailedLoginAttempt: null,
     accountLockedUntil: null,
@@ -88,6 +94,14 @@ export async function updateUser(id: string, data: Partial<Omit<User, 'id' | 'cr
       updateData.accountLockedUntil = new Date(updateData.accountLockedUntil)
     }
   }
+
+  if (updateData.verificationTokenExpires !== undefined) {
+    if (updateData.verificationTokenExpires === null) {
+      updateData.verificationTokenExpires = null
+    } else if (!(updateData.verificationTokenExpires instanceof Date)) {
+      updateData.verificationTokenExpires = new Date(updateData.verificationTokenExpires)
+    }
+  }
   
   const updated: User = {
     ...user,
@@ -101,5 +115,10 @@ export async function updateUser(id: string, data: Partial<Omit<User, 'id' | 'cr
 
 export async function getAllUsers(): Promise<User[]> {
   return Array.from(users.values())
+}
+
+export async function findUserByVerificationToken(token: string): Promise<User | null> {
+  const user = Array.from(users.values()).find(u => u.verificationToken === token)
+  return user || null
 }
 
