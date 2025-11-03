@@ -111,9 +111,7 @@ export default function Home() {
                   <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
-              <Link href="/login" className="w-full sm:w-auto">
-                
-              </Link>
+              <Link href="/login" className="w-full sm:w-auto"></Link>
             </motion.div>
 
             {/* Email Verification Note */}
@@ -121,9 +119,9 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
-              className="max-w-2xl mx-auto bg-linear-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800/50 rounded-xl p-6 mb-16 backdrop-blur-sm"
+              className="w-full max-w-2xl mx-auto bg-linear-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800/50 rounded-xl p-4 sm:p-6 mb-16 backdrop-blur-sm"
             >
-              <div className="flex items-start">
+              <div className="flex flex-col sm:flex-row items-start gap-4">
                 <div className="shrink-0 p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg">
                   <svg
                     className="h-5 w-5 text-blue-600 dark:text-blue-400"
@@ -139,17 +137,21 @@ export default function Home() {
                     />
                   </svg>
                 </div>
-                <div className="ml-4">
-                  <h3 className="text-base font-medium text-blue-800 dark:text-blue-200 mb-1">
+                <div className="w-full">
+                  <h3 className="text-base font-medium text-blue-800 dark:text-blue-200 mb-2">
                     Email Verification Notice
                   </h3>
-                  <p className="text-sm text-blue-700/90 dark:text-blue-300">
-                    For demo purposes, use this test email to verify your
-                    account:
-                    <span className="font-mono text-sm bg-blue-100 dark:bg-blue-900/50 px-2 py-1 rounded-md ml-1.5">
-                      merohtensingh3@gmail.com
-                    </span>
-                  </p>
+                  <div className="text-sm text-blue-700/90 dark:text-blue-300 space-y-2">
+                    <p>
+                      For demo purposes, use this test email to verify your
+                      account:
+                    </p>
+                    <div className="w-full overflow-x-auto">
+                      <span className="inline-block font-mono text-sm bg-blue-100 dark:bg-blue-900/50 px-3 py-1.5 rounded-md whitespace-nowrap">
+                        merohtensingh3@gmail.com
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </motion.div>
